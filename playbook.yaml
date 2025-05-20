@@ -1,0 +1,31 @@
+---
+- name: Copy, Verify, Show Content, and Execute hello.sh
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Copy hello.sh script to all servers
+      ansible.builtin.copy:
+        src: hello.sh
+        dest: /tmp/hello.sh
+        owner: docker
+        group: docker
+        mode: '0775'
+
+    - name: Check if hello.sh exists on remote servers
+      ansible.builtin.stat:
+        path: /tmp/hello.sh
+      register: stat_result
+
+    - name: Debug stat output
+      ansible.builtin.debug:
+        var: stat_result
+
+    - name: Show hello.sh script content
+      ansible.builtin.debug:
+        var: lookup('file', 'hello.sh')
+
+    - name: Execute hello.sh script on each server
+      ansible.builtin.shell: /tmp/hello.sh >> /tmp/hello.log
+      when: stat_result.stat.exists
